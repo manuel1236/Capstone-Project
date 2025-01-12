@@ -1,20 +1,3 @@
-// import React from 'react'
-// import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// import SearchBar from './components/SearchBar';
-//  const App = () => {
-//   return (
-//     <>
-//     <Router>
-//       <Routes>
-//         <Route path='/' element={<SearchBar/>}/>
-//       </Routes>
-//     </Router>
-//     </>
-//   )
-// }
-// export default App;
-
-
 import { useState } from 'react';
 //import reactLogo from './assets/react.svg'; // Ensure this file exists
 //import viteLogo from './assets/vite.svg'; // Ensure this file exists
