@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import DailyQuiz from "./DailyQuiz";
 
@@ -27,15 +27,39 @@ const topics = [
 
 const SearchBar = ({ setSelectedTopic }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [progressData, setProgressData] = useState({});
   const [isQuizStarted, setisQuizStarted] = useState(false);
 
-  // Search & Filter Topics
+  // Fetch data for progress
+  useEffect(() => {
+    const fetchProgress = async () => {
+      const progress = {};
+      for (const topic of topics) {
+        try {
+          const response = await fetch(
+            `https://opentdb.com/api.php?amount=10&category=${topic.id}`
+          );
+          const data = await response.json();
+          progress[topic.id] = {
+            total: data.results.length,
+            taken: Math.floor(Math.random() * data.results.length), // Mock for questions taken
+          };
+        } catch (error) {
+          console.error(`Error fetching data for ${topic.name}:`, error);
+        }
+      }
+      setProgressData(progress);
+    };
+    fetchProgress();
+  }, []);
+
+  // Filter Topics
   const filteredTopics = topics.filter((topic) =>
     topic.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="mx-auto bg-white p-6 shadow rounded-md">
+    <div className="mx-auto bg-white p-6 shadow rounded-md text-left">
       <DailyQuiz
         isQuizStarted={isQuizStarted}
         setisQuizStarted={setisQuizStarted}
@@ -43,7 +67,9 @@ const SearchBar = ({ setSelectedTopic }) => {
 
       {!isQuizStarted && (
         <>
-          <h2 className="text-2xl font-semibold mb-4">Search Topics</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-left font-bold">
+            Search Topics
+          </h2>
           <input
             type="text"
             placeholder="Search topics..."
@@ -52,15 +78,51 @@ const SearchBar = ({ setSelectedTopic }) => {
             className="w-full p-2 border rounded mb-4"
           />
           <ul>
-            {filteredTopics.map((topic) => (
-              <li
-                key={topic.id}
-                className="p-2 border rounded mb-2 bg-gray-100 cursor-pointer hover:bg-yellow-500"
-                onClick={() => setSelectedTopic(topic)}
-              >
-                {topic.name}
-              </li>
-            ))}
+            {filteredTopics.map((topic) => {
+              const progress = progressData[topic.id] || { total: 0, taken: 0 };
+              const percentage = progress.total
+                ? Math.round((progress.taken / progress.total) * 100)
+                : 0;
+
+              return (
+                <li
+                  key={topic.id}
+                  className="p-4 border rounded mb-4 bg-gray-100 cursor-pointer hover:bg-yellow-500 flex justify-between items-center"
+                  onClick={() => setSelectedTopic(topic)}
+                >
+                  <span>{topic.name}</span>
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-12 h-12">
+                      <svg className="w-12 h-12" viewBox="0 0 36 36">
+                        <path
+                          d="M18 2.0845
+                          a 15.9155 15.9155 0 0 1 0 31.831
+                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="#ddd"
+                          strokeWidth="2"
+                        />
+                        <path
+                          d="M18 2.0845
+                          a 15.9155 15.9155 0 0 1 0 31.831
+                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="#4caf50"
+                          strokeWidth="2"
+                          strokeDasharray={`${percentage}, 100`}
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                        {percentage}%
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      {progress.total - progress.taken} left
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </>
       )}
